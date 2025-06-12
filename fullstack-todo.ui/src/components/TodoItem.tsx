@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Button, Checkbox, Icon } from "semantic-ui-react";
+import "./todo-item.css";
 
 interface ITodoItemProps {
   index: number; // used as key for deleting item that has not been saved yet
@@ -45,130 +46,79 @@ const TodoItem = ({
   const titleComponent = editingState ? (
     <input
       type="text"
+      className={`item-title-input ${completed ? "completed-text" : ""}`}
       value={itemTitle}
       onChange={(e) => setItemTitle(e.target.value)}
-      style={{
-        width: "100%",
-        fontSize: "1.5rem",
-        textDecoration: completed ? "line-through" : "",
-      }}
     />
   ) : (
-    <h1
-      style={{
-        marginTop: "0px",
-        textDecoration: completed ? "line-through" : "",
-      }}
-    >
+    <h1 className={`item-title ${completed ? "completed-text" : ""}`}>
       {itemTitle}
     </h1>
   );
 
   const descriptionComponent = editingState ? (
     <textarea
+      className={`item-description-input ${completed ? "completed-text" : ""}`}
       value={itemDescription}
       onChange={(e) => setItemDescription(e.target.value)}
-      style={{
-        width: "100%",
-        fontSize: "1rem",
-        textDecoration: completed ? "line-through" : "",
-      }}
     />
   ) : (
-    <p
-      style={{
-        fontSize: "1rem",
-        textDecoration: completed ? "line-through" : "",
-      }}
-    >
+    <p className={`item-description ${completed ? "completed-text" : ""}`}>
       {itemDescription}
     </p>
   );
 
   return (
     <div
-      style={{
-        border: "1px solid #ccc",
-        backgroundColor: completed ? "#d9d9d9" : "#fff",
-        margin: "4px 0",
-        padding: "4px 8px",
-        borderRadius: ".28571429rem", // value copied from semantic-ui button style
-      }}
+      className={`todo-item-container ${
+        completed ? "completed-background" : ""
+      }`}
     >
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-        }}
-      >
-        <div>
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "row",
-              alignItems: "baseline",
-            }}
-          >
-            <Checkbox
-              style={{ marginRight: "1rem" }}
-              checked={completed}
-              onChange={() =>
-                handleCheckboxChange(id, itemTitle, itemDescription, !completed)
-              }
-            />
-            {titleComponent}
-          </div>
-          {descriptionComponent}
-        </div>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <Button
-            basic
-            style={{
-              marginRight: "1rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "none",
-            }}
-            onClick={() =>
-              handleEditButtonClick(
-                id,
-                index,
-                editingState,
-                itemTitle,
-                itemDescription,
-                completed
-              ).then((result) => setEditingState(result))
+      <div>
+        <div className="todo-item-title-container">
+          <Checkbox
+            className="todo-item-checkbox"
+            checked={completed}
+            onChange={() =>
+              handleCheckboxChange(id, itemTitle, itemDescription, !completed)
             }
-          >
-            {editingState ? (
-              "Save"
-            ) : (
-              <Icon
-                name="pencil alternate"
-                size="large"
-                style={{ marginRight: "0px" }}
-              />
-            )}
-          </Button>
-          <Button
-            basic
-            color="red"
-            style={{
-              marginRight: "1rem",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-            onClick={() => handleDeleteButtonClick(id)}
-          >
-            <Icon
-              name="trash alternate"
-              size="large"
-              style={{ margin: "0 auto" }}
-            />
-          </Button>
+          />
+          {titleComponent}
         </div>
+        {descriptionComponent}
+      </div>
+      <div className="todo-item-button-container">
+        <Button
+          className="todo-item-edit-button"
+          basic
+          onClick={() =>
+            handleEditButtonClick(
+              id,
+              index,
+              editingState,
+              itemTitle,
+              itemDescription,
+              completed
+            ).then((result) => setEditingState(result))
+          }
+        >
+          {editingState ? (
+            "Save"
+          ) : (
+            <Icon
+              name="pencil alternate"
+              size="large"
+              style={{ marginRight: "0px" }}
+            />
+          )}
+        </Button>
+        <Button basic color="red" onClick={() => handleDeleteButtonClick(id)}>
+          <Icon
+            name="trash alternate"
+            size="large"
+            style={{ margin: "0 auto" }}
+          />
+        </Button>
       </div>
     </div>
   );
