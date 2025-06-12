@@ -8,6 +8,7 @@ import {
   updateTodoItem,
 } from "../api/api";
 import type { ITodoItem } from "../types/types";
+import "./todo-list.css";
 
 const debounce = (callback: Function, delay: number) => {
   let timeoutId: number | undefined = undefined;
@@ -177,31 +178,15 @@ function TodoList() {
   ));
 
   return (
-    <div style={{ backgroundColor: "#f0f0f0" }}>
-      <header
-        style={{
-          backgroundColor: "#21ba45",
-          color: "white",
-          padding: "1rem",
-          textAlign: "center",
-        }}
-      >
+    <div className="todo-list-container">
+      <header className="todo-list-header">
         <h1>Todo List</h1>
         <p>
           Fullstack todo list built using React, Semantic UI, Typescript,
           Express JS, and Postgres
         </p>
       </header>
-      <div
-        style={{
-          padding: "2rem",
-          maxWidth: "600px",
-          margin: "0 auto",
-          minHeight: "100vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
+      <div className="todo-list-center-content">
         {renderedTodoItems}
         <Button
           icon="plus"

@@ -1,0 +1,19 @@
+.todo-list-container {
+  background-color: #f0f0f0;
+}
+
+.todo-list-header {
+  background-color: #21ba45;
+  color: white;
+  padding: 1rem;
+  text-align: center;;
+}
+
+.todo-list-center-content {
+  padding: 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
