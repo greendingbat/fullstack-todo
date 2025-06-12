@@ -1,51 +1,48 @@
-import { useCallback, useRef, useState } from "react";
-import { Button, Checkbox, Icon, type CheckboxProps } from "semantic-ui-react";
-
-const debounce = (callback: Function, delay: number) => {
-  let timeoutId: number | undefined = undefined;
-
-  return (...args: any[]) => {
-    window.clearTimeout(timeoutId);
-
-    timeoutId = window.setTimeout(() => {
-      callback.apply(null, args);
-    }, delay);
-  };
-};
+import { useState } from "react";
+import { Button, Checkbox, Icon } from "semantic-ui-react";
 
 interface ITodoItemProps {
+  index: number; // used as key for deleting item that has not been saved yet
+  id: number | null;
   title: string;
   description: string;
   completed: boolean;
+  editingProp?: boolean;
+  handleCheckboxChange: (
+    id: number | null,
+    itemTitle: string,
+    itemDescription: string,
+    completed: boolean
+  ) => void;
+  handleDeleteButtonClick: (id: number | null) => void;
+  handleEditButtonClick: (
+    id: number | null,
+    index: number,
+    editing: boolean,
+    itemTitle: string,
+    itemDescription: string,
+    checked: boolean
+  ) => Promise<boolean>;
 }
 
-const TodoItem = ({ title, description, completed }: ITodoItemProps) => {
+const TodoItem = ({
+  index,
+  id,
+  title,
+  description,
+  completed,
+  editingProp,
+  handleCheckboxChange,
+  handleDeleteButtonClick,
+  handleEditButtonClick,
+}: ITodoItemProps) => {
   const [itemTitle, setItemTitle] = useState<string>(title);
   const [itemDescription, setItemDescription] = useState<string>(description);
-  const [checked, setChecked] = useState<boolean>(completed);
-  const [editing, setEditing] = useState<boolean>(false);
-
-  const debouncedLogRef = useRef(
-    debounce(() => console.log("sending update request"), 500)
+  const [editingState, setEditingState] = useState<boolean>(
+    editingProp || false
   );
 
-  const handleCheckboxChange = useCallback(
-    (e: React.FormEvent<HTMLInputElement>, data: CheckboxProps) => {
-      setChecked(data.checked as boolean);
-      debouncedLogRef.current();
-    },
-    []
-  );
-
-  const handleEditButtonClick = useCallback(() => {
-    if (editing) {
-      // Save changes
-      debouncedLogRef.current();
-    }
-    setEditing(!editing);
-  }, [editing]);
-
-  const titleComponent = editing ? (
+  const titleComponent = editingState ? (
     <input
       type="text"
       value={itemTitle}
@@ -53,35 +50,35 @@ const TodoItem = ({ title, description, completed }: ITodoItemProps) => {
       style={{
         width: "100%",
         fontSize: "1.5rem",
-        textDecoration: checked ? "line-through" : "",
+        textDecoration: completed ? "line-through" : "",
       }}
     />
   ) : (
     <h1
       style={{
         marginTop: "0px",
-        textDecoration: checked ? "line-through" : "",
+        textDecoration: completed ? "line-through" : "",
       }}
     >
       {itemTitle}
     </h1>
   );
 
-  const descriptionComponent = editing ? (
+  const descriptionComponent = editingState ? (
     <textarea
       value={itemDescription}
       onChange={(e) => setItemDescription(e.target.value)}
       style={{
         width: "100%",
         fontSize: "1rem",
-        textDecoration: checked ? "line-through" : "",
+        textDecoration: completed ? "line-through" : "",
       }}
     />
   ) : (
     <p
       style={{
         fontSize: "1rem",
-        textDecoration: checked ? "line-through" : "",
+        textDecoration: completed ? "line-through" : "",
       }}
     >
       {itemDescription}
@@ -92,9 +89,10 @@ const TodoItem = ({ title, description, completed }: ITodoItemProps) => {
     <div
       style={{
         border: "1px solid #ccc",
-        backgroundColor: checked ? "#d9d9d9" : "#fff",
+        backgroundColor: completed ? "#d9d9d9" : "#fff",
         margin: "4px 0",
-        padding: "4px",
+        padding: "4px 8px",
+        borderRadius: ".28571429rem", // value copied from semantic-ui button style
       }}
     >
       <div
@@ -113,8 +111,10 @@ const TodoItem = ({ title, description, completed }: ITodoItemProps) => {
           >
             <Checkbox
               style={{ marginRight: "1rem" }}
-              checked={checked}
-              onChange={handleCheckboxChange}
+              checked={completed}
+              onChange={() =>
+                handleCheckboxChange(id, itemTitle, itemDescription, !completed)
+              }
             />
             {titleComponent}
           </div>
@@ -130,9 +130,18 @@ const TodoItem = ({ title, description, completed }: ITodoItemProps) => {
               justifyContent: "center",
               border: "none",
             }}
-            onClick={handleEditButtonClick}
+            onClick={() =>
+              handleEditButtonClick(
+                id,
+                index,
+                editingState,
+                itemTitle,
+                itemDescription,
+                completed
+              ).then((result) => setEditingState(result))
+            }
           >
-            {editing ? (
+            {editingState ? (
               "Save"
             ) : (
               <Icon
@@ -151,9 +160,7 @@ const TodoItem = ({ title, description, completed }: ITodoItemProps) => {
               alignItems: "center",
               justifyContent: "center",
             }}
-            onClick={() =>
-              console.log("Delete functionality not implemented yet")
-            }
+            onClick={() => handleDeleteButtonClick(id)}
           >
             <Icon
               name="trash alternate"

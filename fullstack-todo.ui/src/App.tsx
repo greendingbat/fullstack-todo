@@ -1,7 +1,181 @@
 import { Button } from "semantic-ui-react";
 import TodoItem from "./TodoItem";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  createTodoItem,
+  deleteTodoItem,
+  getTodoItems,
+  updateTodoItem,
+} from "./api";
+import type { ITodoItem } from "./types";
+
+const debounce = (callback: Function, delay: number) => {
+  let timeoutId: number | undefined = undefined;
+
+  return (...args: any[]) => {
+    window.clearTimeout(timeoutId);
+
+    timeoutId = window.setTimeout(() => {
+      callback.apply(null, args);
+    }, delay);
+  };
+};
 
 function App() {
+  const [todoItems, setTodoItems] = useState<ITodoItem[]>([]);
+
+  useEffect(() => {
+    const fetchTodoItems = async () => {
+      try {
+        const items: ITodoItem[] = await getTodoItems();
+        setTodoItems(items);
+      } catch (error) {
+        window.alert("Error fetching todo items");
+      }
+    };
+    fetchTodoItems();
+  }, []);
+
+  const debouncedUpdate = useRef(
+    debounce(
+      async (id: number, title: string, desc: string, completed: boolean) => {
+        // only send request to api if id exists, otherwise, the update will happen when save is clicked
+        if (id !== null) {
+          await updateTodoItem(id, title, desc, completed);
+        }
+      },
+      500
+    )
+  );
+
+  const handleCheckboxChange = useCallback(
+    (
+      id: number | null,
+      itemTitle: string,
+      itemDescription: string,
+      completed: boolean
+    ) => {
+      debouncedUpdate.current(id, itemTitle, itemDescription, completed);
+      setTodoItems((prevItems: ITodoItem[]) =>
+        prevItems.map((item: ITodoItem) =>
+          item.id === id
+            ? {
+                ...item,
+                completed: completed,
+                itemTitle,
+                itemDesc: itemDescription,
+              }
+            : item
+        )
+      );
+    },
+    []
+  );
+
+  const handleAddTodoItemClick = useCallback(() => {
+    const newTodoItem: ITodoItem = {
+      id: null,
+      itemTitle: "New Item",
+      itemDesc: "Description of the new todo item",
+      completed: false,
+      editingProp: true,
+    };
+    setTodoItems((prevItems: ITodoItem[]) => [...prevItems, newTodoItem]);
+  }, [setTodoItems]);
+
+  const handleDeleteButtonClick = useCallback(
+    async (id: number | null) => {
+      try {
+        // only delete if item exists in db already
+        if (id !== null) {
+          await deleteTodoItem(id as number);
+        }
+        setTodoItems((prevItems: ITodoItem[]) =>
+          prevItems.filter((item: ITodoItem) => item.id !== id)
+        );
+      } catch (error) {
+        window.alert(`Error deleting todo item with id ${id}.`);
+      }
+    },
+    [setTodoItems]
+  );
+
+  const handleEditButtonClick = useCallback(
+    async (
+      id: number | null,
+      index: number,
+      editing: boolean,
+      itemTitle: string,
+      itemDescription: string,
+      checked: boolean
+    ) => {
+      if (editing) {
+        if (id === null) {
+          // if id does not exist, create new
+          try {
+            const response = await createTodoItem(
+              itemTitle,
+              itemDescription,
+              checked
+            );
+            // update state
+            const newTodoItem: ITodoItem = {
+              id: response.id,
+              itemTitle: itemTitle,
+              itemDesc: itemDescription,
+              completed: checked,
+              editingProp: false,
+            };
+            const updatedTodoItems = [...todoItems];
+            updatedTodoItems[index] = newTodoItem; // replace the new item with the created one
+            setTodoItems(updatedTodoItems);
+          } catch (error) {
+            window.alert(`Error creating todo item.`);
+          }
+        } else {
+          // if id exists, update
+          try {
+            const response = await updateTodoItem(
+              id,
+              itemTitle,
+              itemDescription,
+              checked
+            );
+            const newTodoItem: ITodoItem = {
+              id: response.id,
+              itemTitle: itemTitle,
+              itemDesc: itemDescription,
+              completed: checked,
+              editingProp: false,
+            };
+            const updatedTodoItems = [...todoItems];
+            updatedTodoItems[index] = newTodoItem; // replace the new item with the created one
+            setTodoItems(updatedTodoItems);
+          } catch (error) {
+            window.alert(`Error updating todo item with id ${id}.`);
+          }
+        }
+      }
+      return !editing;
+    },
+    [todoItems, createTodoItem, updateTodoItem]
+  );
+
+  const renderedTodoItems = todoItems.map((item, index) => (
+    <TodoItem
+      key={item.id}
+      index={index}
+      id={item.id}
+      title={item.itemTitle}
+      description={item.itemDesc}
+      completed={item.completed}
+      editingProp={item.editingProp}
+      handleCheckboxChange={handleCheckboxChange}
+      handleDeleteButtonClick={handleDeleteButtonClick}
+      handleEditButtonClick={handleEditButtonClick}
+    />
+  ));
+
   return (
     <div style={{ backgroundColor: "#f0f0f0" }}>
       <header
@@ -28,47 +202,13 @@ function App() {
           flexDirection: "column",
         }}
       >
-        <TodoItem
-          title={"Sample Todo"}
-          description="This is a sample todo item."
-          completed={false}
+        {renderedTodoItems}
+        <Button
+          icon="plus"
+          color="green"
+          onClick={handleAddTodoItemClick}
+          disabled={todoItems.some((item) => item.id === null)}
         />
-        <TodoItem
-          title={"Another Todo"}
-          description="This is another todo item."
-          completed={true}
-        />
-        <TodoItem
-          title={"Yet Another Todo"}
-          description="This is yet another todo item."
-          completed={false}
-        />
-        <TodoItem
-          title={"Final Todo"}
-          description="This is the final todo item."
-          completed={true}
-        />
-        <TodoItem
-          title={"Last Todo"}
-          description="This is the last todo item."
-          completed={false}
-        />
-        <TodoItem
-          title={"Extra Todo"}
-          description="This is an extra todo item."
-          completed={true}
-        />
-        <TodoItem
-          title={"Bonus Todo"}
-          description="This is a bonus todo item."
-          completed={false}
-        />
-        <TodoItem
-          title={"Special Todo"}
-          description="This is a special todo item."
-          completed={true}
-        />
-        <Button icon="plus" color="green"/>
       </div>
     </div>
   );

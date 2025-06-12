@@ -84,6 +84,7 @@ app.delete("/api/todoItems/:id", async (req, res) => {
     });
     res.status(204).send();
   } catch (error) {
+    console.log(error);
     res.status(500).send(`Error deleting todo item with ID ${id}`);
   }
 });
