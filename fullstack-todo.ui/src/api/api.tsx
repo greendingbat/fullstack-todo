@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { ITodoItem } from "./types";
+import type { ITodoItem } from "../types/types";
 
 export async function createTodoItem(
   itemTitle: string,

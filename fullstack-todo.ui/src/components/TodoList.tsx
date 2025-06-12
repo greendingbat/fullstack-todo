@@ -6,8 +6,8 @@ import {
   deleteTodoItem,
   getTodoItems,
   updateTodoItem,
-} from "./api";
-import type { ITodoItem } from "./types";
+} from "../api/api";
+import type { ITodoItem } from "../types/types";
 
 const debounce = (callback: Function, delay: number) => {
   let timeoutId: number | undefined = undefined;
@@ -21,7 +21,7 @@ const debounce = (callback: Function, delay: number) => {
   };
 };
 
-function App() {
+function TodoList() {
   const [todoItems, setTodoItems] = useState<ITodoItem[]>([]);
 
   useEffect(() => {
@@ -214,4 +214,4 @@ function App() {
   );
 }
 
-export default App;
+export default TodoList;

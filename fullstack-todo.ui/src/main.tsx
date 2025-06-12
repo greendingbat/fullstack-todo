@@ -1,4 +1,4 @@
 import { createRoot } from "react-dom/client";
-import App from "./App.tsx";
+import TodoList from "./components/TodoList.tsx";
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(<TodoList />);
